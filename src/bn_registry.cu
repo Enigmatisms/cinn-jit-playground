@@ -18,7 +18,7 @@ struct KernelEntry {
 };
 
 static std::array<KernelEntry, 60> kernel_original_table;
-static std::array<KernelEntry, 61> kernel_improved_table;
+static std::array<KernelEntry, 60> kernel_improved_table;
 
 #define BN_IMPROVED_KERNEL(N, H, W, C)        \
 	template __global__                       \
@@ -83,7 +83,9 @@ GENERATE_KERNEL(64)
     entry_original.H = h;   \
     entry_original.W = w;   \
     entry_original.C = c;   \
-    entry_original.func_ptr = reinterpret_cast<void*>(kernel_origin<n, h, w, c, 256>);}
+    entry_original.func_ptr = reinterpret_cast<void*>(kernel_origin<n, h, w, c, 256>); \
+    DEBUG_LOG("[BN Registry] Kernels (%d, %d, %d, %d) stored to [%d]", n, h, w, c, index); \
+    }
 
 #define PUT_KERNEL_FIXED_N_W(N, H, W, C, index) \
     PUT_IMPROVED_KERNEL(N, H, W, C, index) \
@@ -95,12 +97,10 @@ GENERATE_KERNEL(64)
     PUT_KERNEL_FIXED_N_W(N, W, W, 192, base * num_c + 2)
 
 #define PUT_KERNEL(N, n_index, num_w, num_c) \
-    printf("[BN Registry] Storing kernels (batch %d)...\n", N); \
-    PUT_KERNEL_FIXED_N(N, 72, n_index * num_w,     num_c) \
-    PUT_KERNEL_FIXED_N(N, 64, n_index * num_w + 1, num_c) \
-    PUT_KERNEL_FIXED_N(N, 56, n_index * num_w + 2, num_c) \
-    PUT_KERNEL_FIXED_N(N, 48, n_index * num_w + 3, num_c) \
-    printf("[BN Registry] Kernels (batch %d) are successfully stored.\n", N);
+    PUT_KERNEL_FIXED_N(N, 72, (n_index * num_w),     num_c) \
+    PUT_KERNEL_FIXED_N(N, 64, (n_index * num_w + 1), num_c) \
+    PUT_KERNEL_FIXED_N(N, 56, (n_index * num_w + 2), num_c) \
+    PUT_KERNEL_FIXED_N(N, 48, (n_index * num_w + 3), num_c)
 
 __global__ void foo_kernel(float* a) {
     a[threadIdx.x + blockIdx.x * blockDim.x]++;
@@ -112,13 +112,6 @@ void init_kernel_table() {
     PUT_KERNEL(200, 2, 4, 3)
     PUT_KERNEL(128, 3, 4, 3)
     PUT_KERNEL(64,  4, 4, 3)
-
-    auto& entry_original = kernel_original_table[60];
-    entry_original.N = 256;
-    entry_original.H = 1;
-    entry_original.W = 1;
-    entry_original.C = 256;
-    entry_original.func_ptr = reinterpret_cast<void*>(foo_kernel);
 }
 
 void lookup_kernel_call(int n, int w, int c) {
@@ -169,7 +162,6 @@ void lookup_kernel_call(int n, int w, int c) {
                 &var0, &var3, &X, &var1_cp, &out2_cp, &w1, &w2, &out3_cp, &out4_cp
             };
 
-            std::cout << entry_improved.func_ptr << std::endl;
             CUDA_CHECK_RETURN(cudaLaunchKernel(entry_improved.func_ptr, grid_improved, block_improved, args_improved));
             CUDA_CHECK_RETURN(cudaLaunchKernel(entry_original.func_ptr, grid_original, block_original, args_original));
             CUDA_CHECK_RETURN(cudaDeviceSynchronize());
@@ -182,4 +174,5 @@ void lookup_kernel_call(int n, int w, int c) {
             return;
         }
     }
+    printf("(%d, %d, %d, %d) does not match any existing kernels. Existing...\n", n, w, w, c);
 }
