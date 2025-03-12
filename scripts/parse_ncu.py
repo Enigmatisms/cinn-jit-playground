@@ -104,6 +104,7 @@ def batched_parsing(folder: str, kernel_prefix: str = 'fn_full_div_full_div_mul'
     results = []
     for file in os.listdir(folder):
         file_path = os.path.join(folder, file)
+        if os.path.isdir(file_path): continue
         data = get_target_kernel_info(file_path, kernel_prefix)
         elements = Path(file).stem.strip().split('-')
         data.insert(0, ','.join(elements[1:]))
@@ -136,7 +137,7 @@ if __name__ == "__main__":
         print(f"Usage: python {sys.argv[0]} <path to NCU cmdline report folder: ./data by default>")
     else:
         folder_path = sys.argv[1]
-    kernel_prefix = 'kernel_origin'
+    kernel_prefix = 'fn_full_div_full'
     output_path   = './output.xlsx'
     
     all_data = batched_parsing(folder_path, kernel_prefix)

@@ -3,3 +3,5 @@
 **/*.log
 **/*.ncu-rep
 **/*.xlsx
+**/*.exe
+**/*.out
