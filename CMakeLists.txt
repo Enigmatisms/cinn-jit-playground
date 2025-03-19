@@ -68,3 +68,25 @@ target_compile_options(
 	${EXEC2_NAME} PRIVATE
 	$<$<COMPILE_LANGUAGE:CUDA>:${CUDA_FINAL_FLAGS}>
 )
+
+
+set(EXEC3_NAME "bn_pre_div")
+add_executable(${EXEC3_NAME}
+	tests/bn_128_56_1284.cu
+	${SRC}
+)
+
+target_compile_options(
+	${EXEC3_NAME} PRIVATE
+	$<$<COMPILE_LANGUAGE:CUDA>:${CUDA_FINAL_FLAGS}>
+)
+
+set(EXEC4_NAME "reduce")
+add_executable(${EXEC4_NAME}
+	tests/reduce.cu
+)
+
+target_compile_options(
+	${EXEC4_NAME} PRIVATE
+	$<$<COMPILE_LANGUAGE:CUDA>:${CUDA_FINAL_FLAGS}>
+)
